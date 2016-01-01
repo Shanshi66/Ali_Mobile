@@ -69,7 +69,6 @@ def getCategory():
 		category_set.add(line[4])
 
 	print "category size:"+str(len(category_set))
-	
 	for it in category_set:writer.writerow([it])
 
 	rfile.close()
@@ -100,7 +99,7 @@ def dateCmp(x,y):
 		elif x[6]==y[6]:return 0
 		else: return 1
 
-def filegenerate():
+def filegenerate(userid_file,itemid_file):
 	if os.path.exists(userid_file):
 		print userid_file+" existed"
 	else:
@@ -117,6 +116,8 @@ def filegenerate():
 def dataCleanAndTransform():
 	userid_file = "user_id.csv"
 	itemid_file = "item_id.csv"
+	
+	filegenerate(userid_file,itemid_file)
 
 	user_list=set(loadfile(userid_file))
 	item_list=set(loadfile(itemid_file))
@@ -147,37 +148,57 @@ def dataCleanAndTransform():
 	wfile.close()
 
 
+def dataTransform():
+    rfile = file("data.csv","r")
+    wfile = file("tdata.csv","w")
+     
+    reader = csv.reader(rfile)
+    writer = csv.writer(wfile)
+     
+    for user_id,item_id,behavior_type,user_geohash,item_category,time in reader:
+        if reader.line_num%10000==0:print reader.line_num
+        if reader.line_num==1:continue
+        date,hour = time.split(" ")
+        year,month,day=date.split("-")
+        newDate = transformDate(int(month),int(day))
+        writer.writerow([user_id,item_id,behavior_type,user_geohash,item_category,newDate,int(hour)])
+		
+    rfile.close()
+    wfile.close()
+
 def userBehaviorStat():
 	rfile = file(data_file,"r")
 	wfile = file("user_behavior_stat.csv","w")
 
 	
-
 	reader = csv.reader(rfile)
 	writer = csv.writer(wfile)
 
-
-
-def getDataOnly34():
-	rfile = file(tdata_file,"r")
-	wfile = file("data34.csv","w")
+def itemStat():
+	rfile = file(data_file,"r")
+	wfile = file("item_stat.csv","w")
 
 	reader = csv.reader(rfile)
 	writer = csv.writer(wfile)
-	
-	data_set=[]
-	for line in reader:
-		if line[2]=="3" or line[2]=="4":
-			data_set.append(line)
+	item_set = {}
 
-	print len(data_set)
+	for user_id,item_id,behavior_type,user_geohash,item_category,time in reader:
+		behavior_type=int(behavior_type)
+		if reader.line_num%10000==0:print reader.line_num
+		if reader.line_num==1:continue
+		if not item_set.has_key(item_id):item_set[item_id]=0
+        if behavior_type==4:item_set[item_id]+=1
 
-	data_set.sort(dateCmp)
-
-	writer.writerows(data_set)
+	print len(item_set)
+	i=0
+	for item in item_set:
+		if item_set[item]>0:i+=1
+		writer.writerow([item,item_set[item]])
+	print i
 
 	rfile.close()
 	wfile.close()
+
 
 
 

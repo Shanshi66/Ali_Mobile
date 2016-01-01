@@ -1,4 +1,5 @@
 import csv
+import DataProcess
 
 subfile = "dutir_tianchi_recom_predict_luosen.csv"
 tdata = "data_transformed.csv"
@@ -94,5 +95,55 @@ def userBuyPosibility():
 
 	rfile.close()
 	wfile.close()
+
+
+def cartBuy2(month,day,hour):
+    
+    newDate = DataProcess.transformDate(month,day)
+    
+    #rfile=open("cleaned_data.csv","r")
+    rfile=open("tdata.csv","r")
+    wfile=open("answer.csv","w")
+    
+    reader = csv.reader(rfile)
+    writer = csv.writer(wfile)
+    #[user_id,item_id,behavior_type,user_geohash,item_category,newDate,int(hour)
+    
+    cart_set=set()
+    buy_set=set()
+    
+    ans_set={}
+    
+    for user,item,behavior,geo,cate,date,h in reader:
+        date = int(date)
+        h = int(h)
+        behavior=int(behavior)
+        if (date==newDate and h>hour) or (date>newDate):
+            if behavior==3:cart_set.add((user,item))
+            if behavior==4:buy_set.add((user,item))
+    
+    writer.writerow(["userid","itemid"])
+    
+    for item in cart_set:
+        if item in buy_set:continue
+        if not ans_set.has_key(item[0]):ans_set[item[0]]=set()
+        ans_set[item[0]].add(item[1])
+    
+    stat = [len(ans_set[it]) for it in ans_set]
+    stat.sort()
+    for it in stat:print it
+    
+    i=0
+    for user in ans_set:
+        if len(ans_set[user])<60:
+            for item in ans_set[user]:
+                writer.writerow([user,item])
+                i+=1
+    print i
+    
+    
+    rfile.close()
+    wfile.close()
+    
 
 
