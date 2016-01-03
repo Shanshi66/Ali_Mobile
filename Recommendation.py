@@ -116,9 +116,6 @@ def cartBuy2(month,day,hour,step,proportion):
     	itemHotDic[item[0]]=item[1]
 
     itemHot.sort(lambda x,y:cmp(y[1],x[1]))
-
-    print itemHot[0][1]
-
     
     #rfile=open("cleaned_data.csv","r")
 
@@ -161,10 +158,11 @@ def cartBuy2(month,day,hour,step,proportion):
     for item in cart_set:
         if item in buy_set:continue
         if not ans_set.has_key(item[0]):ans_set[item[0]]=[]
-        if wp.has_key(item):
-        	ans_set[item[0]].append((item[1],wp[item][-1]))
-        else:
-        	ans_set[item[0]].append((item[1],0))
+        # if wp.has_key(item):
+        # 	ans_set[item[0]].append((item[1],wp[item][-1]))
+        # else:
+        # 	ans_set[item[0]].append((item[1],0))
+        ans_set[item[0]].append((item[1],itemHotDic[item[1]]))
 
     for user in ans_set:
     	ans_set[user].sort(i_scan_cmp)
