@@ -109,9 +109,19 @@ def userBuyPosibility():
 def cartBuy2(month,day,hour,step,proportion):
     itemHot = DataProcess.loadfile("item_stat.csv")
     newDate = DataProcess.transformDate(month,day)
+
+    itemHotDic={}
+    for item in itemHot:
+    	item[1]=int(item[1])
+    	itemHotDic[item[0]]=item[1]
+
+    itemHot.sort(lambda x,y:cmp(y[1],x[1]))
+
+    print itemHot[0][1]
+
     
     #rfile=open("cleaned_data.csv","r")
-    
+
     rfile = "data_after_%s_%s.csv"%(month,day-step+2)
     if not os.path.exists(rfile):
     	print rfile+" not exists"
