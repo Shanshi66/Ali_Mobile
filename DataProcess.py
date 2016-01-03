@@ -132,7 +132,7 @@ def dataCleanAndTransform():
 	for user_id,item_id,behavior_type,user_geohash,item_category,time in reader:
 		if reader.line_num%10000==0:print reader.line_num
 		if reader.line_num==1:continue
-		if user_id in user_list and item_id in item_list:
+		if user_id in user_list:
 			date,hour = time.split(" ")
 			year,month,day=date.split("-")
 			newDate = transformDate(int(month),int(day))
@@ -170,6 +170,10 @@ def userBehaviorStat():
 	rfile = file(data_file,"r")
 	wfile = file("user_behavior_stat.csv","w")
 
+	for user_id,item_id,behavior_type,user_geohash,item_category,time in reader:
+		if reader.line_num%10000==0:print reader.line_num
+		if reader.line_num==1:continue
+		
 	
 	reader = csv.reader(rfile)
 	writer = csv.writer(wfile)
@@ -183,11 +187,11 @@ def itemStat():
 	item_set = {}
 
 	for user_id,item_id,behavior_type,user_geohash,item_category,time in reader:
-		behavior_type=int(behavior_type)
 		if reader.line_num%10000==0:print reader.line_num
-		if reader.line_num==1:continue
-		if not item_set.has_key(item_id):item_set[item_id]=0
-        if behavior_type==4:item_set[item_id]+=1
+		if reader.line_num>1:
+			behavior_type=int(behavior_type)
+			if not item_set.has_key(item_id):item_set[item_id]=0
+	        if behavior_type==4:item_set[item_id]+=1
 
 	print len(item_set)
 	i=0
@@ -198,6 +202,25 @@ def itemStat():
 
 	rfile.close()
 	wfile.close()
+
+def getData(month,day):
+	rfile = file("cleaned_data.csv","r")
+	wfile = file("data_after_%s_%s.csv"%(month,day),"w")
+
+	reader = csv.reader(rfile)
+	writer = csv.writer(wfile)
+
+	new_date = transformDate(month,day)
+
+	for user_id,item_id,behavior_type,user_geohash,item_category,date,hour in reader:
+		if reader.line_num%10000==0:print reader.line_num
+		date = int(date)
+		if date >= new_date:
+			writer.writerow([user_id,item_id,behavior_type,user_geohash,item_category,date,hour])
+
+	rfile.close()
+	wfile.close()
+
 
 
 
