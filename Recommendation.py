@@ -108,15 +108,23 @@ def userBuyPosibility():
 
 def cartBuy2(month,day,hour,step,proportion):
     itemHot = DataProcess.loadfile("item_stat.csv")
+    userBuy = DataProcess.loadfile("user_stat.csv")
     newDate = DataProcess.transformDate(month,day)
 
     itemHotDic={}
     for item in itemHot:
-    	item[1]=int(item[1])
+    	item[1]=float(item[1])
     	itemHotDic[item[0]]=item[1]
 
+    userBuyDic={}
+    for user in userBuy:
+    	user[1]=int(user[1])
+    	userBuyDic[user[0]]=user[1]
+
     itemHot.sort(lambda x,y:cmp(y[1],x[1]))
-    
+    userBuy.sort(lambda x,y:cmp(y[1],x[1]))
+    print itemHot[0][1]
+    print userBuy[0][1]
     #rfile=open("cleaned_data.csv","r")
 
     rfile = "data_after_%s_%s.csv"%(month,day-step+2)
@@ -164,15 +172,34 @@ def cartBuy2(month,day,hour,step,proportion):
         # 	ans_set[item[0]].append((item[1],0))
         ans_set[item[0]].append((item[1],itemHotDic[item[1]]))
 
+
+    tt_set =[]
+
+    i=0
     for user in ans_set:
-    	ans_set[user].sort(i_scan_cmp)
-    	slen = int(len(ans_set[user])*0.9)
-    	for i,item in enumerate(ans_set[user]):
-    		if len(ans_set[user])<50:
-    			writer.writerow([user,item[0]])
-    			continue
-    		if i<slen:
-    			writer.writerow([user,item[0]])
+    	if userBuyDic[user]<2:continue
+    	i+=1
+    	for item in ans_set[user]:
+   			tt_set.append((user,item[0]))
+
+    print "user: %s %s"%(len(ans_set),i)
+    print "total size: %s"%len(tt_set)
+
+
+    #random_answer = random.sample(tt_set,int(len(tt_set)*0.8))
+    #print len(random_answer)
+    for ui in tt_set:
+    	writer.writerow(ui)
+
+    # for user in ans_set:
+    # 	ans_set[user].sort(i_scan_cmp)
+    # 	slen = int(len(ans_set[user])*0.9)
+    # 	for i,item in enumerate(ans_set[user]):
+    # 		if len(ans_set[user])<50:
+    # 			writer.writerow([user,item[0]])
+    # 			continue
+    # 		if i<slen:
+    # 			writer.writerow([user,item[0]])
 
 
     #logRes = LR("sample_data_%s_%s.csv"%(step,proportion))
@@ -328,7 +355,7 @@ def sampling(step,proportion):
 
 def LR(fileName):
 	data_set = np.loadtxt(fileName,delimiter=",")
-	X = data_set[:,-4:-2]
+	X = data_set[:,:-1]
 	y = data_set[:,-1]
 
 	X = preprocessing.scale(X)

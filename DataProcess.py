@@ -6,7 +6,7 @@ import math
 #user_id,item_id,behavior_type,user_geohash,item_category,time
 data_file = "data.csv"
 
-def getUserid():
+def getUserid(td=0):
 	rfile = file(data_file,"r")
 	wfile = file("user_id.csv","w")
 
@@ -22,7 +22,7 @@ def getUserid():
 
 	count=0
 	for it in user_buytime:
-		if user_buytime[it]>0:
+		if user_buytime[it]>td:
 			writer.writerow([it])
 			count+=1
 
@@ -190,15 +190,37 @@ def itemStat():
 		if reader.line_num%10000==0:print reader.line_num
 		if reader.line_num>1:
 			behavior_type=int(behavior_type)
-			if not item_set.has_key(item_id):item_set[item_id]=0
-	        if behavior_type==4:item_set[item_id]+=1
+			if not item_set.has_key(item_id):item_set[item_id]=[0,0]
+	        if behavior_type==4:item_set[item_id][1]+=1
+	        if behavior_type==3:item_set[item_id][0]+=1
 
 	print len(item_set)
 	i=0
 	for item in item_set:
-		if item_set[item]>0:i+=1
-		writer.writerow([item,item_set[item]])
+		if item_set[item][1]>0:i+=1
+		if item_set[item][0]==0:item_set[item][0]=0.01
+		writer.writerow([item,float(item_set[item][1])/item_set[item][0]])
 	print i
+
+	rfile.close()
+	wfile.close()
+
+def userStat():
+	rfile = file("cleaned_data.csv","r")
+	wfile = file("user_stat.csv","w")
+
+	user_set={}
+
+	reader = csv.reader(rfile)
+	writer = csv.writer(wfile)
+
+	for user_id,item_id,behavior_type,user_geohash,item_category,date,h in reader:
+		if reader.line_num%10000==0:print reader.line_num
+		if not user_set.has_key(user_id):user_set[user_id]=0
+		if int(behavior_type)==4:user_set[user_id]+=1
+
+	for user in user_set:
+		writer.writerow([user,user_set[user]])
 
 	rfile.close()
 	wfile.close()
@@ -220,6 +242,11 @@ def getData(month,day):
 
 	rfile.close()
 	wfile.close()
+
+def getEssentialData(td=0,month=12,day=12):
+	getUserid(td)
+	dataCleanAndTransform()
+	getData(month,day)
 
 
 
