@@ -133,14 +133,14 @@ def cartBuy2(month,day,hour,step,proportion):
     	return
     rfile=open("data_after_%s_%s.csv"%(month,day-step+2),"r")
     wfile=open("answer.csv","w")
-    
+
     reader = csv.reader(rfile)
     writer = csv.writer(wfile)
     #[user_id,item_id,behavior_type,user_geohash,item_category,newDate,int(hour)
-    
+
     cart_set=set()
     buy_set=set()
-    
+
     ans_set={}
     ui_scan_stat={}
 
@@ -160,9 +160,9 @@ def cartBuy2(month,day,hour,step,proportion):
     for item in ui_scan_stat:
     	if ui_scan_stat[item][-1]==1:continue
     	wp[item]=ui_scan_stat[item][-3:-1]
-    
+
     writer.writerow(["userid","itemid"])
-    
+
     for item in cart_set:
         if item in buy_set:continue
         if not ans_set.has_key(item[0]):ans_set[item[0]]=[]
@@ -222,9 +222,9 @@ def cartBuy2(month,day,hour,step,proportion):
     #stat = [len(ans_set[it]) for it in ans_set]
     #stat.sort()
     #for it in stat:print it
-    
 
-    
+
+
     rfile.close()
     wfile.close()
 
@@ -373,20 +373,3 @@ def LR(fileName):
 	print np.sqrt(metrics.mean_squared_error(y_test,y_pred))
 
 	return logRes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
