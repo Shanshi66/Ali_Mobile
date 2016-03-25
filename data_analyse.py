@@ -44,3 +44,8 @@ def stat():
     stat_file.close()
     user_file.close()
     item_file.close()
+
+if __name__ == '__main__':
+    print '-----------------------------------'
+    print 'stat some information...'
+    stat()
