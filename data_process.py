@@ -26,11 +26,6 @@ def dataTransform():
 		year , month ,day = date.split('-')
 		line[5] = transformDate(int(month),int(day))
 		line.append(hour)
-		data_set.append(line)
-
-	data_set.sort(dateCmp)
-
-	for line in data_set:
 		writer.writerow(line)
 
 	user_file.close()
