@@ -8,7 +8,7 @@ def progressBar(done , total):
         sys.stdout.write('\r'+'Current Progess: %.2f%'%cur_progress))
     sys.stdout.flush()
 
-def timekeeping(start_time,end_time):
+def timekeeper(start_time,end_time):
     duration = end_time - start_time
     if duration > 3600:
         duration = float(duration)/3600

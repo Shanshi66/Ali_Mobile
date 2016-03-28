@@ -4,7 +4,7 @@
 """
 
 import csv
-from utility import progressBar
+from utility import progressBar,timekeeper
 import time
 
 PERIOD = 11
@@ -16,13 +16,13 @@ DATA_SET = 'data/nuser.csv'
 def splitData():
     for i in range(1,FILES+1):
         print '-'*50
-        print 'Generate training set %d: ' % i
+        print 'Split dataset 1 %d: ' % i
         rfile = file(DATA_SET,'r')
         reader = csv.reader(rfile)
         j = i + 10
         if j != 32:
-            train_file = file('training_set/%d.csv'%i,'w')
-            result_file = file('training_set/%s_%d.csv'%('result',i),'w')
+            train_file = file('splited_data/%d.csv'%i,'w')
+            result_file = file('splited_data/%s_%d.csv'%('result',i),'w')
             train_writer = csv.writer(train_file)
             result_writer = csv.writer(result_file)
             for line in reader:
@@ -32,7 +32,7 @@ def splitData():
             train_file.close()
             result_file.close()
         else:
-            train_file = file('for_prediction.csv','w')
+            train_file = file('splited_data/for_prediction.csv','w')
             train_writer = csv.writer(train_file)
             for line in reader:
                 progressBar(reader.line_num,DATASET_SIZE)
@@ -44,6 +44,6 @@ if __name__ == '__main__':
     start_time = time.time()
     splitData()
     end_time = time.time()
-    duration = timekeeping(start_time,end_time)
+    duration = timekeeper(start_time,end_time)
     print '='*50
-    print 'It takes ' + duration + ' to generate training set'
+    print 'It takes ' + duration + ' to split dataset.'
