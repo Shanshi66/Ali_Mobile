@@ -14,9 +14,9 @@ nuser_file = 'data/nuser.csv'
 
 
 def dateCmp(x,y):
-	if int(x[5])<int(y[5]):return -1
-	elif int(x[5])>int(y[5]):return 1
-	else:
-		if x[6]<y[6]:return -1
-		elif x[6]==y[6]:return 0
-		else: return 1
+    if int(x[5])<int(y[5]):return -1
+    elif int(x[5])>int(y[5]):return 1
+    else:
+        if x[6]<y[6]:return -1
+        elif x[6]==y[6]:return 0
+        else: return 1

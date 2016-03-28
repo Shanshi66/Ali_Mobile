@@ -20,11 +20,11 @@ def cartBuy():
         if reader.line_num % 100000 ==0:
             sys.stdout.write('\r'+str(reader.line_num))
             sys.stdout.flush()
-        if int(line[5]) == 30 and int(line[6]) > 8:
+        if int(line[5]) == 30 and int(line[6]) > 15:
             if int(line[2]) == 3:cart_30.add((line[0],line[1]))
             if int(line[2]) == 4:
                 if (line[0],line[1]) in cart_30:cart_30.remove((line[0],line[1]))
-        if int(line[5]) == 31 and int(line[6]) > 8:
+        if int(line[5]) == 31 and int(line[6]) > 15:
             if int(line[2]) == 3:cart_31.add((line[0],line[1]))
             if int(line[2]) == 4:
                 if (line[0],line[1]) in cart_31:cart_31.remove((line[0],line[1]))
