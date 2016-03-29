@@ -1,5 +1,5 @@
 """
-    generate training set
+    split data set
     @Author : Rosen
 """
 
@@ -26,7 +26,7 @@ def splitData():
             train_writer = csv.writer(train_file)
             result_writer = csv.writer(result_file)
             for line in reader:
-                progressBar(reader.line_num,DATASET_SIZE)
+                progressBar(reader.line_ num,DATASET_SIZE)
                 if int(line[5]) >= i and int(line[5]) < j: train_writer.writerow(line)
                 if int(line[5]) == j and int(line[2]) == 4: result_writer.writerow([line[0],line[1]])
             train_file.close()

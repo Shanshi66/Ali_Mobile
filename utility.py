@@ -5,7 +5,11 @@ def progressBar(done , total):
     if cur_progress == 100.0:
         sys.stdout.write("done!\n")
     else:
-        sys.stdout.write('\r'+'Current Progess: %.2f%'%cur_progress))
+        sys.stdout.write('\r'+'Current Progess: %6.2f'%cur_progress + r'%')
+    sys.stdout.flush()
+
+def doneCount(done):
+    sys.stdout.write('\r'+'Processed items : %d'%done)
     sys.stdout.flush()
 
 def timekeeper(start_time,end_time):
@@ -18,4 +22,4 @@ def timekeeper(start_time,end_time):
         unit = 'm'
     else:
         unit = 's'
-    return '%s' % str(duration)+unit
+    return '%.2f%s' % (duration, unit)
