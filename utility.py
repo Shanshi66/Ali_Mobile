@@ -5,12 +5,16 @@ def progressBar(done , total):
     if cur_progress == 100.0:
         sys.stdout.write("done!\n")
     else:
-        sys.stdout.write('\r'+'Current Progess: %6.2f'%cur_progress + r'%')
+        sys.stdout.write('\r'+'%6.2f'%cur_progress + r'%')
     sys.stdout.flush()
 
 def doneCount(done):
-    sys.stdout.write('\r'+'Processed items : %d'%done)
+    sys.stdout.write('\r'+'%6d'%done)
     sys.stdout.flush()
+
+def cutoffLine(line_type):
+    if line_type == '*': print '\n' + '*' * 50
+    if line_type == '-': print '\n' + '-' * 50
 
 def timekeeper(start_time,end_time):
     duration = end_time - start_time
