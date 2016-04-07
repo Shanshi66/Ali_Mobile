@@ -11,11 +11,12 @@ def evaluate(prediction,result):
 
     intersection = prediction & result
 
-    precision = float(len(intersection))/len(prediction)
-    recall = float(len(intersection))/len(result)
+    precision = float(len(intersection))/len(prediction)*100
+    recall = float(len(intersection))/len(result)*100
 
     F1 = 2 * precision * recall / (precision + recall)
 
-    print 'P : %f' % precision
-    print 'R : %f' % recall
-    print 'F1: %f' % F1
+    print 'P : %2f' % precision
+    print 'R : %2f' % recall
+    print 'F1: %2f' % F1
+    return precision, recall, F1

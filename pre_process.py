@@ -8,8 +8,10 @@
 import os
 import csv
 import time
+from utility import cutoffLine, doneCount
 
 def dataTransform():
+    print 'start transform data...'
     minday = 50
     maxday = -1
 
@@ -33,16 +35,39 @@ def dataTransform():
     new_user_file.close()
 
     print minday,maxday
+    print 'data transform finish!'
 
 def transformDate(month,day):
     if month==11:return day-17
     else:return day+13
 
+def drop_no_buy_user():
+    cutoffLine('-')
+    rfile = file('data/nuser.csv','r')
+    reader = csv.reader(rfile)
+    buyed_user = set()
+    print 'user behavior stat'
+    for line in reader:
+        doneCount(reader.line_num)
+        if int(line[2]) == 4: buyed_user.add(int(line[0]))
+    rfile.close()
+    print '\ndrop...'
+    rfile = file('data/nuser.csv','r')
+    wfile = file('data/nuser_cleaned','w')
+    reader = csv.reader(rfile)
+    writer = csv.writer(wfile)
+
+    count = 0
+    for line in reader:
+        doneCount(reader.line_num)
+        if int(line[0]) in buyed_user:
+            writer.writerow(line)
+            count += 1
+    cutoffLine('-')
+    print count
+    rfile.close()
+    wfile.close()
+
 if __name__ == '__main__':
-    print '------------------------------'
-    print 'start transform data...'
-    t0 = time.time()
-    dataTransform()
-    t1 = time.time()
-    print 'data transform finish!'
-    print 'I take %f s'%(t1-t0)
+    #dataTransform()
+    drop_no_buy_user()
