@@ -6,6 +6,7 @@ import random
 from utility import progressBar, timekeeper, doneCount, cutoffLine
 from utility import writeCSV, readCSV
 from split import FILES
+import sys
 
 PRE_DIR = 'splited_data'
 TOTAL = 56992193
@@ -17,10 +18,12 @@ def sampling(proportion):
     start_time = time.time()
     print 'sampling with propotion %d...'%proportion
     negative_needed = POSITIVE * proportion
+    print negative_needed
     sample_times = 10
     mod = NEGATIVE / sample_times
+    print mod
     negative_eachtime = negative_needed / sample_times
-
+    print negative_eachtime
     training_set = readCSV(PRE_DIR + '/positive_set.csv', int)
 
     ## sampling negative example
@@ -32,7 +35,7 @@ def sampling(proportion):
         negative_tmp.append(map(int, line))
         if reader.line_num % mod == 0:
             random.shuffle(negative_tmp)
-            training_set = training_set + negative_tmp[0:negative_eachtime]
+            training_set.extend(negative_tmp[0:negative_eachtime])
             negative_tmp = []
     rfile.close()
 
@@ -50,4 +53,7 @@ def sampling(proportion):
     print 'It takes %s to sampling with proportion %d'%(duration, proportion)
 
 if __name__ == '__main__':
-    sampling(10)
+    if len(sys.argv) < 2: print 'Need sample propotion'
+    else:
+        propotion = int(sys.argv[1])
+        sampling(propotion)
