@@ -5,7 +5,10 @@
     offline evaluate
 """
 
+from utility import cutoffLine
+
 def evaluate(prediction,result):
+    cutoffLine('-')
     prediction = set(prediction)
     result = set(result)
 
