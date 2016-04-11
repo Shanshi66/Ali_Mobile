@@ -4,11 +4,13 @@ import os
 import time
 import sys
 import random
+import pickle
 from utility import progressBar, timekeeper, doneCount, cutoffLine
 from utility import writeCSV, readCSV
 from split import FILES, TOTAL_DAY
 
 PRE_DIR = 'splited_data'
+ci_rank = {}
 
 def extract_feature(window, file_name, line_count, start_date, result_name = ''):
     r_name = PRE_DIR + '/' + file_name
@@ -21,9 +23,9 @@ def extract_feature(window, file_name, line_count, start_date, result_name = '')
     UI_feature = {}
     for line in reader:
         progressBar(reader.line_num, line_count)
-        UI = (int(line[0]),int(line[1]))
+        UI = (int(line[0]),int(line[1]),int(line[4]))
         if UI not in UI_feature: UI_feature[UI] = [0]*(window*4)
-        ##  4种行为统计
+        ## 4种行为统计
         index = int(line[5]) - start_date
         if int(line[2]) == 1 : UI_feature[UI][index] += 1
         if int(line[2]) == 2 : UI_feature[UI][window+index] += 1
@@ -31,6 +33,11 @@ def extract_feature(window, file_name, line_count, start_date, result_name = '')
         if int(line[2]) == 4 : UI_feature[UI][3*window+index] += 1
 
     r_file.close()
+
+    ## 商品同类排名
+    for UI in UI_feature:
+        if ci_rank[UI[2]].has_key(UI[1]): UI_feature[UI].append(ci_rank[UI[2]][UI[1]])
+        else: UI_feature[UI].append(0)
 
     ## 打标签
     result_set = set()
@@ -43,7 +50,7 @@ def extract_feature(window, file_name, line_count, start_date, result_name = '')
 
     if result_set:
         for UI in UI_feature:
-            if UI in result_set:
+            if (UI[0],UI[1]) in result_set:
                 writer.writerow(list(UI) + UI_feature[UI] + [1])
             else:
                 writer.writerow(list(UI) + UI_feature[UI] + [0])
@@ -52,7 +59,7 @@ def extract_feature(window, file_name, line_count, start_date, result_name = '')
 
     w_file.close()
 
-def generate_training_set(window):
+def generate_training_set(window, ci_rank):
     start_time = time.time()
     global PRE_DIR, FILES
     PRE_DIR = 'splited_data_%d'%window
@@ -92,22 +99,47 @@ def generate_training_set(window):
     print 'It takes %s to generate training set' % duration
 
 def global_feature():
-    u_file = file('data/nuser.csv', 'r')
+    cutoffLine('-')
+    print 'Generate global feature'
+    # 统计每种商品每天销量
+    global ci_rank
+    if os.path.exists('data/ci_rank.pkl'):
+        ci_rank_file = open('data/ci_rank.pkl', 'rb')
+        ci_rank = pickle.load(ci_rank_file)
+        # for c in ci_rank: print ci_rank[c]
+        ci_rank_file.close()
+    else:
+        u_file = file('data/nuser.csv', 'r')
+        u_reader = csv.reader(u_file)
+        ci_rank = {}
+        for line in u_reader:
+            doneCount(u_reader.line_num)
+            item = int(line[1])
+            behavior = int(line[2])
+            category = int(line[4])
+            if not ci_rank.has_key(category): ci_rank[category] = {}
+            if behavior == 4:
+                if not ci_rank[category].has_key(item): ci_rank[category][item] = 0
+                ci_rank[category][item] += 1
 
-    ci_rank = {}
+        for c in ci_rank:
+            ## 销量排名；销量好的排名在后，方便处理没有销量的商品
+            rank_list = sorted(ci_rank[c].iteritems(), key = lambda x: x[1])
+            for index, item in enumerate(rank_list):
+                item = list(item)
+                item[1] = index + 1
+                rank_list[index] = item
+            ci_rank[c] = dict(rank_list)
 
-    for line in u_file:
-        item = int(line[1])
-        behavior = int(line[2])
-        if behavior == 4:
-            if ci_rank.has_key(item):
-                ci_rank[]
+        ci_rank_file = open('data/ci_rank.pkl', 'wb')
+        pickle.dump(ci_rank, ci_rank_file)
+        ci_rank_file.close()
+        u_file.close()
 
-    u_file.close()
 
 if __name__ == '__main__':
     if len(sys.argv) < 2: print 'Need window size'
     else:
         window = int(sys.argv[1])
         global_feature()
-        generate_training_set(window)
+        generate_training_set(window, ci_rank)
