@@ -3,12 +3,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
+from sklearn.externals import joblib
 import csv
 from utility import cutoffLine, timekeeper, doneCount, dropItemsNotInSet, loadItemSubset
 import time
 import numpy as np
 import evaluate
 import sys
+import os
 
 def LR(X, y):
     cutoffLine('-')
@@ -54,8 +56,14 @@ def train(window, proportion, algo, confidence):
         line = map(int, line)
         X.append(line[3:-1])
         y.append(line[-1])
-    if algo == 'lr': model = LR(X, y)
-    if algo == 'rf': model = RF(X, y)
+
+    model_name = 'data/model/%s_%d_%d.model'%(algo, window, proportion)
+    if os.path.exists(model_name): model = joblib.load(model_name)
+    else:
+        if algo == 'lr': model = LR(X, y)
+        if algo == 'rf': model = RF(X, y)
+        joblib.dump(model, model_name)
+    cutoffLine('-')
     print model.classes_
     item_subset = loadItemSubset()
 
