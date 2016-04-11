@@ -9,6 +9,8 @@ from utility import cutoffLine
 
 def evaluate(prediction,result):
     cutoffLine('-')
+    print 'Prediction set size: %d' % len(prediction)
+    print 'Result set size: %d' % len(result)
     prediction = set(prediction)
     result = set(result)
 
