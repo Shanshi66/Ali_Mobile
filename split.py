@@ -9,7 +9,7 @@ import time
 import os
 import sys
 
-WINDOW = 10
+WINDOW = 7
 TOTAL_DAY = 31
 FILES = TOTAL_DAY - WINDOW + 1
 #DATASET_SIZE = 23291027
