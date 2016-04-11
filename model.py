@@ -52,7 +52,7 @@ def train(window, proportion, algo, confidence):
     for line in t_reader:
         doneCount(t_reader.line_num)
         line = map(int, line)
-        X.append(line[2:-1])
+        X.append(line[3:-1])
         y.append(line[-1])
     if algo == 'lr': model = LR(X, y)
     if algo == 'rf': model = RF(X, y)
@@ -65,7 +65,7 @@ def train(window, proportion, algo, confidence):
     record_file.write('\tP: %f\n'%P)
     record_file.write('\tR: %f\n'%R)
     record_file.write('\tF1: %f\n'%F)
-    record_file.write('-'*30)
+    record_file.write('-'*30+'\n')
     record_file.close()
 
     predict(window, model, item_subset, proportion, algo, confidence)
@@ -90,7 +90,7 @@ def evaluate_model(window, model, item_subset, confidence):
         doneCount(test_reader.line_num)
         line = map(int, line)
         UI.append(tuple(line[0:2]))
-        X.append(line[2:-1])
+        X.append(line[3:-1])
         if line[-1] == 1 : real_set.add((line[0],line[1]))
         if test_reader.line_num % each_time == 0:
             y_pred = model.predict_proba(X)
@@ -129,7 +129,7 @@ def predict(window, model, item_subset, proportion, algo, confidence):
         doneCount(f_reader.line_num)
         line = map(int, line)
         UI.append(tuple(line[0:2]))
-        X.append(line[2:])
+        X.append(line[3:])
         if f_reader.line_num % each_time == 0:
             y_pred = model.predict_proba(X)
             for index, y in enumerate(y_pred):

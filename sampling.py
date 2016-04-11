@@ -22,12 +22,9 @@ def sampling(window, proportion):
     start_time = time.time()
     print 'sampling with propotion %d...' % proportion
     exec('negative_needed = POSITIVE_%d * propotion' % window)
-    print negative_needed
-    sample_times = 10
+    sample_times = 20
     exec('mod = NEGATIVE_%d / sample_times' % window)
-    print mod
     exec('negative_eachtime = negative_needed / sample_times')
-    print negative_eachtime
     training_set = readCSV(PRE_DIR + '/positive_set.csv', int)
 
     ## sampling negative example
