@@ -54,7 +54,6 @@ def loadItemSubset():
         doneCount(reader.line_num)
         if reader.line_num == 1: continue
         item_set.add(int(line[0]))
-    cutoffLine('-')
     return item_set
 
 def dropItemsNotInSet(result, subset):
