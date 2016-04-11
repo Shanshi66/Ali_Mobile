@@ -1,4 +1,5 @@
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
@@ -9,9 +10,9 @@ import numpy as np
 import evaluate
 import sys
 
-TRAIN_SET_DIR = 'training_set'
-
-def logRes(X, y):
+def LR(X, y):
+    cutoffLine('-')
+    print 'Training...'
     X = preprocessing.scale(X)
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 1)
     c_set = [0.01, 0.5, 0.1] + map(lambda x: x/100.0, range(50,1001,50))
@@ -33,35 +34,18 @@ def logRes(X, y):
     print best_model.coef_[0]
     return best_model
 
-def train_LR(proportion):
-    start_time = time.time()
-    cutoffLine('*')
-    print 'LR model training with sample proportion 1:%d...' % proportion
+def RF(X, y):
     cutoffLine('-')
-    t_file = file('data/training_set_%d.csv'%proportion, 'r')
-    t_reader = csv.reader(t_file)
-    X = []
-    y = []
-    for line in t_reader:
-        line = map(int, line)
-        X.append(line[2:-1])
-        y.append(line[-1])
-    model = logRes(X,y)
-    item_subset = loadItemSubset()
-    evaluate_model(model, item_subset)
-    predict(model, item_subset, proportion, 'lr')
-    t_file.close()
+    print 'training...'
+    model = RandomForestClassifier(n_estimators = 100)
+    model.fit(X, y)
+    return model
 
-    cutoffLine('*')
-    end_time = time.time()
-    duration = timekeeper(start_time, end_time)
-    print 'I takes %s to train , evaluate model and generate result' % duration
-
-def train_RF(propotion):
+def train(window, proportion, algo, confidence):
     start_time = time.time()
     cutoffLine('*')
-    print 'RF model training with sample propotion 1:%d...'%propotion
-    t_file = file('data/training_set_%d.csv' % propotion, 'r')
+    print '%s model training with sample proportion 1:%d...' %(algo, proportion)
+    t_file = file('data/training_set_%d_%d.csv' % (window, proportion), 'r')
     t_reader = csv.reader(t_file)
     X = []
     y = []
@@ -70,49 +54,94 @@ def train_RF(propotion):
         line = map(int, line)
         X.append(line[2:-1])
         y.append(line[-1])
-    model = RF(X, y)
+    if algo == 'lr': model = LR(X, y)
+    if algo == 'rf': model = RF(X, y)
+    print model.classes_
     item_subset = loadItemSubset()
-    evaluate_model(model, item_subset)
-    predict(model, item_subset, proportion, 'rf')
+
+    record_file = open('data/model_evaluate_record.txt','a')
+    P, R, F = evaluate_model(window, model, item_subset, confidence)
+    record_file.write('window %d '%window + algo+' %d'%proportion + ' %.2f\n'%confidence)
+    record_file.write('\tP: %f\n'%P)
+    record_file.write('\tR: %f\n'%R)
+    record_file.write('\tF1: %f\n'%F)
+    record_file.write('-'*30)
+    record_file.close()
+
+    predict(window, model, item_subset, proportion, algo, confidence)
 
     t_file.close()
     cutoffLine('*')
     end_time = time.time()
     duration = timekeeper(start_time, end_time)
-    print 'I takes %s to train , evaluate model and generate result'% duration
+    print 'I takes %s to train , evaluate model and generate result' % duration
 
-def evaluate_model(model, item_subset):
+def evaluate_model(window, model, item_subset, confidence):
     cutoffLine('-')
-    print 'offline evaluate model'
-    test_file = file('splited_data/set_test.csv', 'r')
+    print 'offline evaluate model with confidence %f' % confidence
+    test_file = file('splited_data_%d/set_test.csv'%window, 'r')
     test_reader = csv.reader(test_file)
     predict_set = set()
     real_set = set()
+    UI = []
+    X = []
+    each_time = 500000
     for line in test_reader:
         doneCount(test_reader.line_num)
         line = map(int, line)
+        UI.append(tuple(line[0:2]))
+        X.append(line[2:-1])
         if line[-1] == 1 : real_set.add((line[0],line[1]))
-        if model.predict([line[2:-1]])[0] == 1: predict_set.add((line[0],line[1]))
+        if test_reader.line_num % each_time == 0:
+            y_pred = model.predict_proba(X)
+            for index, y in enumerate(y_pred):
+                if y[1] > confidence: predict_set.add(UI[index])
+            UI = []
+            X = []
+    if len(UI) > 0:
+        y_pred = model.predict_proba(X)
+        for index, y in enumerate(y_pred):
+            if y[1] > confidence: predict_set.add(UI[index])
+        UI = []
+        X = []
 
     predict_set = dropItemsNotInSet(predict_set, item_subset)
     real_set = dropItemsNotInSet(real_set, item_subset)
     import evaluate
     P, R, F = evaluate.evaluate(predict_set, real_set)
     test_file.close()
+    return P, R, F
 
-def predict(model, item_subset, proportion, algo):
+def predict(window, model, item_subset, proportion, algo, confidence):
     cutoffLine('-')
-    print 'Generate result set'
-    feature_file = file('splited_data/set_for_prediction.csv', 'r')
-    result_file = file('data/tianchi_mobile_recommendation_predict_%s_%d.csv'%(algo, proportion), 'w')
+    print 'Generate result set with confidence %f' % confidence
+    feature_file = file('splited_data_%d/set_for_prediction.csv'%window, 'r')
+    result_file = file('data/tianchi_mobile_recommendation_predict_%d_%s_%d_%s.csv'%\
+                                        (window, algo, proportion, str(confidence)), 'w')
     f_reader = csv.reader(feature_file)
     r_writer = csv.writer(result_file)
     r_writer.writerow(['user_id','item_id'])
     predict_set = set()
+    UI = []
+    X = []
+    each_time = 500000
     for line in f_reader:
         doneCount(f_reader.line_num)
         line = map(int, line)
-        if model.predict([line[2:]])[0] == 1: predict_set.add((line[0], line[1]))
+        UI.append(tuple(line[0:2]))
+        X.append(line[2:])
+        if f_reader.line_num % each_time == 0:
+            y_pred = model.predict_proba(X)
+            for index, y in enumerate(y_pred):
+                if y[1] > confidence: predict_set.add(UI[index])
+            UI = []
+            X = []
+    if len(UI) > 0:
+        y_pred = model.predict_proba(X)
+        for index, y in enumerate(y_pred):
+            if y[1] > confidence: predict_set.add(UI[index])
+        UI = []
+        X = []
 
     cutoffLine('-')
     print "Prediction set size before drop: %d" % len(predict_set)
@@ -124,9 +153,12 @@ def predict(model, item_subset, proportion, algo):
     result_file.close()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3: print 'Need algorithm and propotion'
+    if len(sys.argv) < 4: print 'Need window, algorithm, propotion and confidence'
     else:
-        algo = sys.argv[1]
-        propotion = int(sys.argv[2])
-        if algo == 'lr': train_LR(propotion)
-        if algo == 'rf': train_RF(propotion)
+        window =  int(sys.argv[1])
+        algo = sys.argv[2]
+        propotion = int(sys.argv[3])
+        confidence = float(sys.argv[4])
+        print "Window %d" % window
+        if algo == 'lr': train(window, propotion, algo, confidence)
+        if algo == 'rf': train(window, propotion, algo, confidence)
