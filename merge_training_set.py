@@ -3,14 +3,19 @@ import csv
 import os
 import time
 import random
+import sys
 from utility import progressBar, timekeeper, doneCount, cutoffLine
 from utility import writeCSV, readCSV
-from split import FILES
+from split import FILES, TOTAL_DAY
 
 PRE_DIR = 'splited_data'
-TOTAL = 56992193
-POSITIVE = 44114
-NEGATIVE = 56948079
+TOTAL_10 = 56992193
+POSITIVE_10 = 44114
+NEGATIVE_10 = 56948079
+
+TOTAL_7 = 46748293
+POSITIVE_7 = 46802
+NEGATIVE_7 = 46701491
 
 def merge_training_set():
     cutoffLine('*')
@@ -52,13 +57,9 @@ def merge_training_set():
     neg_file.close()
 
     cutoffLine('-')
-    # 44114
     print 'Positive Example: %d' % positive_count
-    # 59373295
     print 'Negative Example: %d' % (total_count - positive_count)
-    # 59417409
     print 'Total Example: %d' % total_count
-    # 一致性判断
     print 'Is right? %s'%('Yes' if positive_count + negative_count == total_count else 'No')
 
     end_time = time.time()
@@ -67,4 +68,10 @@ def merge_training_set():
     print 'It takes %s to merge training set and backup negative and positive set' % duration
 
 if __name__ == '__main__':
-    merge_training_set()
+    if len(sys.argv) < 2: print 'Need window size'
+    else:
+        window = int(sys.argv[1])
+        global FILES, PRE_DIR
+        FILES = TOTAL_DAY - window + 1
+        PRE_DIR = 'splited_data_%d' % window
+        merge_training_set()

@@ -9,20 +9,24 @@ from split import FILES
 import sys
 
 PRE_DIR = 'splited_data'
-TOTAL = 56992193
-POSITIVE = 44114
-NEGATIVE = 56948079
+TOTAL_10 = 56992193
+POSITIVE_10 = 44114
+NEGATIVE_10 = 56948079
 
-def sampling(proportion):
+TOTAL_7 = 46748293
+POSITIVE_7 = 46802
+NEGATIVE_7 = 46701491
+
+def sampling(window, proportion):
     cutoffLine('*')
     start_time = time.time()
-    print 'sampling with propotion %d...'%proportion
-    negative_needed = POSITIVE * proportion
+    print 'sampling with propotion %d...' % proportion
+    exec('negative_needed = POSITIVE_%d * propotion' % window)
     print negative_needed
     sample_times = 10
-    mod = NEGATIVE / sample_times
+    exec('mod = NEGATIVE_%d / sample_times' % window)
     print mod
-    negative_eachtime = negative_needed / sample_times
+    exec('negative_eachtime = negative_needed / sample_times')
     print negative_eachtime
     training_set = readCSV(PRE_DIR + '/positive_set.csv', int)
 
@@ -31,7 +35,7 @@ def sampling(proportion):
     reader = csv.reader(rfile)
     negative_tmp = []
     for line in reader:
-        progressBar(reader.line_num, NEGATIVE)
+        exec('progressBar(reader.line_num, NEGATIVE_%d)' % window)
         negative_tmp.append(map(int, line))
         if reader.line_num % mod == 0:
             random.shuffle(negative_tmp)
@@ -39,21 +43,26 @@ def sampling(proportion):
             negative_tmp = []
     rfile.close()
 
-    wfile = file('data/training_set_%d.csv'%proportion, 'w')
+    wfile = file('data/training_set_%d_%d.csv' % (window, propotion), 'w')
     writer = csv.writer(wfile)
     random.shuffle(training_set)
     writer.writerows(training_set)
     wfile.close()
 
     cutoffLine('-')
-    print "Real proportion: %f" %((len(training_set)-POSITIVE) / float(POSITIVE))
+    exec('real_proportion = (len(training_set)- POSITIVE_%d) / float(POSITIVE_%d)'%(window, window))
+    print "Real proportion: %f" % real_proportion
     cutoffLine('*')
     end_time = time.time()
     duration = timekeeper(start_time, end_time)
     print 'It takes %s to sampling with proportion %d'%(duration, proportion)
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2: print 'Need sample propotion'
+    if len(sys.argv) < 3: print 'Need sample window and propotion'
     else:
-        propotion = int(sys.argv[1])
-        sampling(propotion)
+        window = int(sys.argv[1])
+        propotion = int(sys.argv[2])
+        print 'Window %d dataset' % window
+        global PRE_DIR
+        PRE_DIR = 'splited_data_%d' % window
+        sampling(window, propotion)

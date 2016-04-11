@@ -6,24 +6,30 @@
 import csv
 from utility import progressBar,timekeeper,cutoffLine
 import time
+import os
+import sys
 
-PERIOD = 11
+WINDOW = 10
 TOTAL_DAY = 31
-FILES = TOTAL_DAY - PERIOD + 2
+FILES = TOTAL_DAY - WINDOW + 1
 #DATASET_SIZE = 23291027
 DATASET_SIZE = 22427352
-PRE_DIR = 'splited_data'
+PRE_DIR = 'splited_data_%d' % WINDOW
 DATA_SET = 'data/nuser_cleaned.csv'
 
 def splitData():
-    stat_file = file('splited_data/stat.csv','w')
+    cutoffLine('*')
+    print 'Start split data with window %d' % WINDOW
+    start_time = time.time()
+
+    stat_file = file(PRE_DIR + '/stat.csv','w')
     stat_writer = csv.writer(stat_file)
     for i in range(1,FILES+1):
         cutoffLine('-')
-        print 'Split dataset %d: ' % i
+        print 'Split dataset %d/%d: ' % (i, FILES)
         rfile = file(DATA_SET,'r')
         reader = csv.reader(rfile)
-        j = i + 10
+        j = i + WINDOW
         if j != TOTAL_DAY + 1:
             if j == TOTAL_DAY:
                 train_file_name = 'test.csv'
@@ -63,12 +69,18 @@ def splitData():
             train_file.close()
         rfile.close()
 
-if __name__ == '__main__':
-    print 'Start split data'
-    cutoffLine('*')
-    start_time = time.time()
-    splitData()
     end_time = time.time()
     duration = timekeeper(start_time,end_time)
-    cutoffLine('*')
+    cutoffLine('-')
     print 'It takes ' + duration + ' to split dataset.'
+    cutoffLine('*')
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2: print 'Need a window'
+    else:
+        global WINDOW, PRE_DIR, FILES
+        WINDOW = int(sys.argv[1])
+        FILES = TOTAL_DAY - WINDOW + 1
+        PRE_DIR = 'splited_data_%d' % WINDOW
+        if not os.path.exists(PRE_DIR): os.makedirs(PRE_DIR)
+        splitData()
