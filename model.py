@@ -12,6 +12,7 @@ import evaluate
 import sys
 import os
 
+
 def LR(X, y):
     cutoffLine('-')
     print 'Training...'
@@ -68,15 +69,17 @@ def train(window, proportion, algo, confidence):
     item_subset = loadItemSubset()
 
     record_file = open('data/model_evaluate_record.txt','a')
-    P, R, F = evaluate_model(window, model, item_subset, confidence)
+    P, R, F= evaluate_model(algo, window, model, item_subset, confidence)
+    predict_set_size = predict(window, model, item_subset, proportion, algo, confidence)
     record_file.write('window %d '%window + algo+' %d'%proportion + ' %.2f\n'%confidence)
     record_file.write('\tP: %f\n'%P)
     record_file.write('\tR: %f\n'%R)
     record_file.write('\tF1: %f\n'%F)
+    record_file.write('Predict Set Size: %d\n'%predict_set_size)
     record_file.write('-'*30+'\n')
     record_file.close()
 
-    predict(window, model, item_subset, proportion, algo, confidence)
+
 
     t_file.close()
     cutoffLine('*')
@@ -84,7 +87,7 @@ def train(window, proportion, algo, confidence):
     duration = timekeeper(start_time, end_time)
     print 'I takes %s to train , evaluate model and generate result' % duration
 
-def evaluate_model(window, model, item_subset, confidence):
+def evaluate_model(algo, window, model, item_subset, confidence):
     cutoffLine('-')
     print 'offline evaluate model with confidence %f' % confidence
     test_file = file('splited_data_%d/set_test.csv'%window, 'r')
@@ -101,12 +104,14 @@ def evaluate_model(window, model, item_subset, confidence):
         X.append(line[3:-1])
         if line[-1] == 1 : real_set.add((line[0],line[1]))
         if test_reader.line_num % each_time == 0:
+            if algo == 'lr': X = preprocessing.scale(X)
             y_pred = model.predict_proba(X)
             for index, y in enumerate(y_pred):
                 if y[1] > confidence: predict_set.add(UI[index])
             UI = []
             X = []
     if len(UI) > 0:
+        if algo == 'lr': X = preprocessing.scale(X)
         y_pred = model.predict_proba(X)
         for index, y in enumerate(y_pred):
             if y[1] > confidence: predict_set.add(UI[index])
@@ -139,12 +144,14 @@ def predict(window, model, item_subset, proportion, algo, confidence):
         UI.append(tuple(line[0:2]))
         X.append(line[3:])
         if f_reader.line_num % each_time == 0:
+            if algo == 'lr': X = preprocessing.scale(X)
             y_pred = model.predict_proba(X)
             for index, y in enumerate(y_pred):
                 if y[1] > confidence: predict_set.add(UI[index])
             UI = []
             X = []
     if len(UI) > 0:
+        if algo == 'lr': X = preprocessing.scale(X)
         y_pred = model.predict_proba(X)
         for index, y in enumerate(y_pred):
             if y[1] > confidence: predict_set.add(UI[index])
@@ -159,6 +166,8 @@ def predict(window, model, item_subset, proportion, algo, confidence):
 
     feature_file.close()
     result_file.close()
+
+    return len(predict_set)
 
 if __name__ == '__main__':
     if len(sys.argv) < 4: print 'Need window, algorithm, propotion and confidence'
