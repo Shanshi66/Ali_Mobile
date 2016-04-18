@@ -23,10 +23,10 @@ def extract_feature(window, actday, file_name, line_count, start_date, result_na
     ## 统计同类商品排名，为了避免使用未来信息
     ci_rank = {}
     for c in ci_sale:
-        ## 统计考察日actday之前商品销量
+        ## 统计(actday-window)之前商品销量
         ci_rank[c] = {}
         for item in ci_sale[c]:
-            ci_rank[c][item] = sum(ci_sale[c][item][0:actday])
+            ci_rank[c][item] = sum(ci_sale[c][item][0:actday-window])
         ## 销量排名；销量好的排名在后，方便处理没有销量的商品(设为0)
         rank_list = sorted(ci_rank[c].iteritems(), key = lambda x: x[1])
         for index, item in enumerate(rank_list):
