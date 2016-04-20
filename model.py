@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
+from sklearn.svm import SVC
 from sklearn.externals import joblib
 import csv
 from utility import cutoffLine, timekeeper, doneCount, dropItemsNotInSet, loadItemSubset
@@ -37,9 +38,18 @@ def LR(X, y):
     print best_model.coef_[0]
     return best_model
 
+def SVM(X, y):
+    cutoffLine('-')
+    print 'Training...'
+    X = preprocessing.scale(X)
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 1)
+    SVM_model = SVC()
+    SVM_model.fit(X, y)
+    return SVM_model
+
 def RF(X, y):
     cutoffLine('-')
-    print 'training...'
+    print 'Training...'
     model = RandomForestClassifier(n_estimators = 100)
     model.fit(X, y)
     return model
@@ -63,6 +73,7 @@ def train(window, proportion, algo, confidence):
     else:
         if algo == 'lr': model = LR(X, y)
         if algo == 'rf': model = RF(X, y)
+        if algo == 'svm': model = SVM(X, y)
         joblib.dump(model, model_name)
     cutoffLine('-')
     print model.classes_
@@ -104,17 +115,27 @@ def evaluate_model(algo, window, model, item_subset, confidence):
         X.append(line[3:-1])
         if line[-1] == 1 : real_set.add((line[0],line[1]))
         if test_reader.line_num % each_time == 0:
-            if algo == 'lr': X = preprocessing.scale(X)
-            y_pred = model.predict_proba(X)
-            for index, y in enumerate(y_pred):
-                if y[1] > confidence: predict_set.add(UI[index])
+            if algo == 'lr' or algo == 'svm': X = preprocessing.scale(X)
+            if algo == 'lr' or algo == 'rf':
+                y_pred = model.predict_proba(X)
+                for index, y in enumerate(y_pred):
+                    if y[1] > confidence: predict_set.add(UI[index])
+            if algo == 'svm':
+                y_pred = model.predict(X)
+                for index, y in enumerate(y_pred):
+                    if y == 1: predict_set.add(UI[index])
             UI = []
             X = []
     if len(UI) > 0:
-        if algo == 'lr': X = preprocessing.scale(X)
-        y_pred = model.predict_proba(X)
-        for index, y in enumerate(y_pred):
-            if y[1] > confidence: predict_set.add(UI[index])
+        if algo == 'lr' or algo == 'svm': X = preprocessing.scale(X)
+        if algo == 'lr' or algo == 'rf':
+            y_pred = model.predict_proba(X)
+            for index, y in enumerate(y_pred):
+                if y[1] > confidence: predict_set.add(UI[index])
+        if algo == 'svm':
+            y_pred = model.predict(X)
+            for index, y in enumerate(y_pred):
+                if y == 1: predict_set.add(UI[index])
         UI = []
         X = []
 
@@ -144,17 +165,28 @@ def predict(window, model, item_subset, proportion, algo, confidence):
         UI.append(tuple(line[0:2]))
         X.append(line[3:])
         if f_reader.line_num % each_time == 0:
-            if algo == 'lr': X = preprocessing.scale(X)
-            y_pred = model.predict_proba(X)
-            for index, y in enumerate(y_pred):
-                if y[1] > confidence: predict_set.add(UI[index])
+            if algo == 'lr' or algo == 'svm': X = preprocessing.scale(X)
+            if algo == 'lr' or algo == 'rf':
+                y_pred = model.predict_proba(X)
+                print y_pred
+                for index, y in enumerate(y_pred):
+                    if y[1] > confidence: predict_set.add(UI[index])
+            if algo == 'svm':
+                y_pred = model.predict(X)
+                for index, y in enumerate(y_pred):
+                    if y == 1: predict_set.add(UI[index])
             UI = []
             X = []
     if len(UI) > 0:
-        if algo == 'lr': X = preprocessing.scale(X)
-        y_pred = model.predict_proba(X)
-        for index, y in enumerate(y_pred):
-            if y[1] > confidence: predict_set.add(UI[index])
+        if algo == 'lr' or algo == 'svm': X = preprocessing.scale(X)
+        if algo == 'lr' or algo == 'rf':
+            y_pred = model.predict_proba(X)
+            for index, y in enumerate(y_pred):
+                if y[1] > confidence: predict_set.add(UI[index])
+        if algo == 'svm':
+            y_pred = model.predict(X)
+            for index, y in enumerate(y_pred):
+                if y == 1: predict_set.add(UI[index])
         UI = []
         X = []
 
@@ -177,5 +209,4 @@ if __name__ == '__main__':
         propotion = int(sys.argv[3])
         confidence = float(sys.argv[4])
         print "Window %d" % window
-        if algo == 'lr': train(window, propotion, algo, confidence)
-        if algo == 'rf': train(window, propotion, algo, confidence)
+        train(window, propotion, algo, confidence)
