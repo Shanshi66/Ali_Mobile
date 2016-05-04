@@ -69,6 +69,7 @@ def splitData():
             train_file.close()
         rfile.close()
 
+    stat_file.close()
     end_time = time.time()
     duration = timekeeper(start_time,end_time)
     cutoffLine('-')
